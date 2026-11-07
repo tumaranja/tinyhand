@@ -205,8 +205,13 @@ function step(dt, colors) {
 }
 
 // ---- Record mode: fixed-size frames, both areas side by side with labels ----
-const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', line: '#dddddd', screen: '#ffffff', dot: '#cccccc' };
-async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
+const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2 };
+const REC_THEMES = {
+  light: { bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', screen: '#ffffff', dot: '#cccccc' },
+  dark: { bg: '#000000', panel: '#1a1a1a', ink: '#ffffff', muted: '#aaaaaa', screen: '#1a1a1a', dot: '#444444' },
+};
+async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'dark' } = {}) {
+  Object.assign(REC, REC_THEMES[theme]);
   const out = document.createElement('canvas');
   const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.h;
   out.width = W * REC.d; out.height = H * REC.d;

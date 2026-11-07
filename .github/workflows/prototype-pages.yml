@@ -1,0 +1,40 @@
+# Publishes the tap-motion prototype to GitHub Pages (this fork only):
+# https://tumaranja.github.io/tinyhand/prototypes/tap-motion/
+name: Prototype pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - prototypes/tap-motion/**
+      - assets/hand_*.png
+      - .github/workflows/prototype-pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.repository == 'tumaranja/tinyhand'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}prototypes/tap-motion/
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build site
+        run: |
+          mkdir -p _site/prototypes/tap-motion _site/assets
+          cp prototypes/tap-motion/index.html _site/prototypes/tap-motion/
+          cp assets/hand_*.png _site/assets/
+          printf '<!doctype html><meta http-equiv="refresh" content="0; url=prototypes/tap-motion/"><a href="prototypes/tap-motion/">Tap motion prototype</a>\n' > _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+      - id: deployment
+        uses: actions/deploy-pages@v4
