@@ -21,7 +21,7 @@ macOS 13 or later, Apple Silicon and Intel.
 
 ## Swing tap (this fork)
 
-<img src="./.github/tap-motion.gif" alt="Side by side: on the left the original tap only shrinks the hand a little; on the right the hand lifts up, then swings down onto the spot." width="680" />
+<img src="./.github/tap-motion.gif" alt="Side by side: Before, the original tap only shrinks the hand a little; After, the hand swings up and down onto the spot." width="680" />
 
 On a tap the hand winds up (the fingertip rises about 20% of the screen height, the hand holding the stick rises about half as far), then swings down and presses for about 0.22 s in total. The tap sound plays when the fingertip lands. Dragging to draw skips straight to the pressed pose. The motion lives in `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/TinyHand/ArmView.swift).
 

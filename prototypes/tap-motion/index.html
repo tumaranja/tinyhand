@@ -14,18 +14,18 @@
 -->
 <style>
   :root {
-    --bg: #f4f3f7; --panel: #ffffff; --ink: #1d1b22; --muted: #55525e;
-    --line: #dcd9e3; --screen: #eceaf1; --dot: #c9c4d6; --accent: #5b3fd1; --on-accent: #ffffff;
+    --bg: #ffffff; --panel: #ffffff; --ink: #000000; --muted: #555555;
+    --line: #dddddd; --screen: #f2f2f2; --dot: #cccccc; --accent: #000000; --on-accent: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #141318; --panel: #1d1b23; --ink: #f1eff6; --muted: #aaa6b6;
-      --line: #34313d; --screen: #26242d; --dot: #4a4656; --accent: #a996ff; --on-accent: #141318;
+      --bg: #000000; --panel: #000000; --ink: #ffffff; --muted: #aaaaaa;
+      --line: #333333; --screen: #111111; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #141318; --panel: #1d1b23; --ink: #f1eff6; --muted: #aaa6b6;
-    --line: #34313d; --screen: #26242d; --dot: #4a4656; --accent: #a996ff; --on-accent: #141318;
+    --bg: #000000; --panel: #000000; --ink: #ffffff; --muted: #aaaaaa;
+    --line: #333333; --screen: #111111; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
@@ -47,13 +47,13 @@
 </head>
 <body>
 <main>
-  <h1>Tap motion: now vs new</h1>
+  <h1>Tap motion: before vs after</h1>
   <div class="controls">
     <label>Strength <input id="strength" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
-    <figure><figcaption>Now <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
-    <figure><figcaption>New <span>swings up and down</span></figcaption><canvas id="cNew"></canvas></figure>
+    <figure><figcaption>Before <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
+    <figure><figcaption>After <span>swings up and down</span></figcaption><canvas id="cNew"></canvas></figure>
   </div>
 </main>
 <script>
@@ -199,7 +199,7 @@ function step(dt, colors) {
 }
 
 // ---- Record mode: fixed-size frames, both areas side by side with labels ----
-const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#f4f3f7', panel: '#ffffff', ink: '#1d1b22', muted: '#55525e', line: '#dcd9e3', screen: '#eceaf1', dot: '#c9c4d6' };
+const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#ffffff', panel: '#ffffff', ink: '#000000', muted: '#555555', line: '#dddddd', screen: '#f2f2f2', dot: '#cccccc' };
 async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
   const out = document.createElement('canvas');
   const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.label + REC.h;
@@ -219,7 +219,7 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
       o.restore();
       o.beginPath(); o.roundRect(x + 0.5, y + 0.5, REC.w - 1, REC.label + REC.h - 1, 10); o.strokeStyle = REC.line; o.stroke();
       o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
-      o.fillText(j ? 'New' : 'Now', x + 12, y + REC.label / 2 + 1);
+      o.fillText(j ? 'After' : 'Before', x + 12, y + REC.label / 2 + 1);
       o.font = '400 13px Manrope, system-ui, sans-serif'; o.fillStyle = REC.muted; o.textAlign = 'right';
       o.fillText(j ? 'swings up and down' : 'shrinks a little', x + REC.w - 12, y + REC.label / 2 + 1);
       o.textAlign = 'left';
