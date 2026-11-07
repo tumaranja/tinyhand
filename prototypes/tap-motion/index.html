@@ -30,7 +30,7 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
   main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
+  h1 { font-size: 20px; margin: 0 0 14px; }
   p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
   .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 14px; font-size: 14px; }
   .controls label { display: inline-flex; gap: 6px; align-items: center; }
@@ -48,13 +48,12 @@
 <body>
 <main>
   <h1>Tap motion: now vs new</h1>
-  <p class="sub">It taps by itself. Move over either area and click to tap yourself; both hands follow the same pointer.</p>
   <div class="controls">
     <label>Strength <input id="strength" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
     <figure><figcaption>Now <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
-    <figure><figcaption>New <span>lifts up, swings down</span></figcaption><canvas id="cNew"></canvas></figure>
+    <figure><figcaption>New <span>swings up and down</span></figcaption><canvas id="cNew"></canvas></figure>
   </div>
 </main>
 <script>
@@ -222,7 +221,7 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
       o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
       o.fillText(j ? 'New' : 'Now', x + 12, y + REC.label / 2 + 1);
       o.font = '400 13px Manrope, system-ui, sans-serif'; o.fillStyle = REC.muted; o.textAlign = 'right';
-      o.fillText(j ? 'lifts up, swings down' : 'shrinks a little', x + REC.w - 12, y + REC.label / 2 + 1);
+      o.fillText(j ? 'swings up and down' : 'shrinks a little', x + REC.w - 12, y + REC.label / 2 + 1);
       o.textAlign = 'left';
     });
     const blob = await new Promise(r => out.toBlob(r, 'image/png'));
