@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tap Motion Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<!--
+  Prototype for the swing tap in Sources/TinyHand/ArmView.swift (see docs in README).
+  Serve the repo root and open /prototypes/tap-motion/ :
+    python3 prototypes/tap-motion/record_server.py
+  ?record turns it into a fixed-size frame renderer used to make .github/tap-motion.gif.
+-->
+<style>
+  :root {
+    --bg: #f4f3f7; --panel: #ffffff; --ink: #1d1b22; --muted: #55525e;
+    --line: #dcd9e3; --screen: #eceaf1; --dot: #c9c4d6; --accent: #5b3fd1; --on-accent: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141318; --panel: #1d1b23; --ink: #f1eff6; --muted: #aaa6b6;
+      --line: #34313d; --screen: #26242d; --dot: #4a4656; --accent: #a996ff; --on-accent: #141318;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141318; --panel: #1d1b23; --ink: #f1eff6; --muted: #aaa6b6;
+    --line: #34313d; --screen: #26242d; --dot: #4a4656; --accent: #a996ff; --on-accent: #141318;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 14px; font-size: 14px; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; }
+  select, input[type=range] { accent-color: var(--accent); }
+  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+  .stages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
+  figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  figcaption { padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+  figcaption span { font-weight: 400; color: var(--muted); }
+  canvas { display: block; width: 100%; aspect-ratio: 4 / 3; cursor: none; touch-action: none; }
+  body.record main { padding: 0; max-width: none; }
+  body.record h1, body.record p.sub, body.record .controls, body.record .stages { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Tap motion: now vs new</h1>
+  <p class="sub">Move over either area and click to tap. Both hands follow the same pointer.</p>
+  <div class="controls">
+    <label>Hand <select id="hand">
+      <option value="lavender">Lavender toy</option>
+      <option value="black">Black</option>
+      <option value="glove">Glove</option>
+      <option value="robot">Robot</option>
+      <option value="coral">Coral</option>
+    </select></label>
+    <label>Strength <input id="strength" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
+    <label><input id="slow" type="checkbox"> Slow motion</label>
+    <label><input id="auto" type="checkbox" checked> Auto-tap</label>
+    <button id="tapBtn" type="button">Tap</button>
+  </div>
+  <div class="stages">
+    <figure><figcaption>Now <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
+    <figure><figcaption>New <span>lifts up, swings down</span></figcaption><canvas id="cNew"></canvas></figure>
+  </div>
+</main>
+<script>
+const RECORD = new URLSearchParams(location.search).has('record');
+if (RECORD) document.body.classList.add('record');
+
+// ---- Hand asset: same measuring as HandAsset.measure in PointerStyle.swift ----
+function measure(img) {
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  const a = g.getImageData(0, 0, w, h).data;
+  const counts = new Array(h).fill(0), lo = new Array(h).fill(-1), hi = new Array(h).fill(-1);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (a[(y * w + x) * 4 + 3] > 128) { counts[y]++; if (lo[y] < 0) lo[y] = x; hi[y] = x; }
+  const center = y => lo[y] < 0 ? 0.5 : (lo[y] + hi[y]) / 2 / w;
+  const top = counts.findIndex(n => n > 0);
+  const searchEnd = Math.min(h, top + Math.floor(0.45 * h));
+  let maxW = 0; for (let y = top; y < searchEnd; y++) maxW = Math.max(maxW, counts[y]);
+  let fist = top; while (fist < h && !(counts[fist] > 0.6 * maxW)) fist++;
+  let wrist = fist; while (wrist < h && !(counts[wrist] < 0.35 * maxW)) wrist++;
+  const rodW = counts[Math.min(h - 1, wrist + Math.floor(h / 50))];
+  let lastRow = h - 1; while (lastRow > 0 && counts[lastRow] === 0) lastRow--;
+  let rodEnd = lastRow;
+  for (let y = Math.min(h - 1, wrist + Math.floor(h / 33)); y < h; y++) if (counts[y] > 1.8 * rodW) { rodEnd = y; break; }
+  return { img, w, h, aspect: w / h, handTop: Math.max(0, top - 0.004 * h) / h, tip: top / h, wrist: wrist / h,
+           rodEnd: rodEnd / h, tipX: center(Math.min(h - 1, top + Math.floor(h / 200))), rodX: center(Math.floor((wrist + rodEnd) / 2)) };
+}
+const assets = {};
+function loadHand(name) {
+  if (assets[name]) return Promise.resolve(assets[name]);
+  return new Promise(res => { const im = new Image(); im.onload = () => res(assets[name] = measure(im)); im.src = `../../assets/hand_${name}.png`; });
+}
+
+// ---- Geometry: same as ArmView.aim. The small area is a crop of a bigger screen,
+// so fractions of the screen height use S = ZOOM * area height. ----
+const ZOOM = 2.4, CROP_Y = 0.35;
+const handLenFrac = 0.13, gripLeanFrac = 0.30, gripDepthFrac = 0.12, gripFollow = 0.08, liftFrac = 0.06, minRodFrac = 0.05;
+function makeStage(canvas, kind) { return { canvas, g: canvas.getContext('2d'), kind, gripX: null, press: 0, tapT: null }; }
+function sizeStage(s, w, h, d) {
+  if (w == null) { const r = s.canvas.getBoundingClientRect(); w = r.width; h = r.height; }
+  d = d || devicePixelRatio || 1;
+  s.W = w; s.H = h; s.d = d; s.canvas.width = Math.round(w * d); s.canvas.height = Math.round(h * d);
+  s.g.setTransform(d, 0, 0, d, 0, 0);
+}
+
+// The new tap, mirrored in ArmView.swing(at:). t = ms since the tap.
+function newMotion(t, k) {
+  const A = 130, B = 90; // wind-up, swing-in (ms)
+  const easeOut = x => 1 - (1 - x) ** 3, easeIn = x => x * x;
+  const rest = { poke: 0, press: 0, tilt: 0, gx: 0, gy: 0, ux: 0, uy: 0 };
+  if (t < 0) return rest;
+  const UX = 0.025 * k, UY = 0.2 * k;
+  const at = e => ({ poke: 0.02 * k * e, tilt: -0.03 * k * e, ux: UX * e, uy: UY * e, gx: 0.45 * UX * e, gy: 0.45 * UY * e });
+  if (t < A) { const e = easeOut(t / A); return { ...at(e), press: -0.6 * e }; }
+  if (t < A + B) { const e = easeIn((t - A) / B); return { ...at(1 - e), press: -0.6 + 1.6 * e }; }
+  return { ...rest, press: Math.exp(-(t - A - B) / 120) };
+}
+
+const spots = [{ x: 0.3, y: 0.32 }, { x: 0.62, y: 0.5 }, { x: 0.36, y: 0.7 }];
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function drawScreen(s, colors) {
+  const { g, W, H } = s;
+  g.fillStyle = colors.screen; g.fillRect(0, 0, W, H);
+}
+
+function drawArm(s, a, cursor, dt) {
+  const { g, W, H } = s, k = +strength.value, S = H * ZOOM;
+  const cur = { x: cursor.x, y: H - cursor.y }; // y-up like AppKit
+  const targetX = Math.min(Math.max(cur.x + gripLeanFrac * S * 1.6, W * 0.15), W + S * 0.3);
+  s.gripX = s.gripX == null ? targetX : s.gripX + (targetX - s.gripX) * (1 - Math.pow(1 - gripFollow, dt / 16.67));
+  const grip = { x: s.gripX, y: -(gripDepthFrac + CROP_Y) * S }; // the area sits CROP_Y above the screen's bottom edge
+
+  let press, m = null;
+  if (s.kind === 'now') {
+    s.press += (0 - s.press) * (1 - Math.pow(1 - 0.18, dt / 16.67));
+    press = s.press;
+  } else {
+    m = newMotion(s.tapT == null ? -1 : clock - s.tapT, k);
+    press = m.press; grip.x += m.gx * S; grip.y += m.gy * S;
+  }
+
+  let dx = cur.x - grip.x, dy = cur.y - grip.y; const dist = Math.hypot(dx, dy);
+  const poke = m ? m.poke * S : 0;
+  dx = dx - dx / dist * poke + (m ? m.ux * S : 0);
+  dy = dy - dy / dist * poke + (m ? m.uy * S : 0);
+  const reach = Math.hypot(dx, dy), aimAngle = Math.atan2(dy, dx);
+
+  const handPts = handLenFrac * S * (1 - (s.kind === 'now' ? 0.06 : 0.10) * press);
+  const sc = handPts / (a.wrist - a.handTop), widthPts = sc * a.aspect;
+  const handTipPts = (a.wrist - a.tip) * sc, tipOffX = (a.tipX - a.rodX) * widthPts;
+  const along = Math.sqrt(Math.max(0, reach * reach - tipOffX * tipOffX));
+  const rodLen = Math.max(minRodFrac * S, along - handTipPts);
+  const rotation = aimAngle - Math.atan2(rodLen + handTipPts, tipOffX) + (m ? m.tilt : 0);
+  const lift = liftFrac * S * (1 - 0.8 * press), pressed = Math.max(0, press);
+
+  g.save();
+  g.translate(0, H); g.scale(1, -1);
+  g.translate(grip.x, grip.y); g.rotate(rotation); g.translate(-a.rodX * widthPts, 0);
+  g.shadowColor = `rgba(0,0,0,${0.26 + 0.06 * pressed})`;
+  g.shadowBlur = (Math.max(1, lift * 0.35) + 5 * pressed) * s.d;
+  g.shadowOffsetX = lift * 0.6 * s.d; g.shadowOffsetY = lift * s.d; // device space is y-down: falls down-right
+  const slice = (y0, y1, dy0, dh) => {
+    g.save(); g.translate(0, dy0 + dh); g.scale(1, -1);
+    g.drawImage(a.img, 0, y0 * a.h, a.w, (y1 - y0) * a.h, 0, 0, widthPts, dh);
+    g.restore();
+  };
+  slice(a.wrist, a.rodEnd, 0, rodLen);
+  slice(a.handTop, a.wrist, rodLen, handPts);
+  g.restore();
+}
+
+// ---- Controls and clock ----
+const strength = document.getElementById('strength'), sv = document.getElementById('sv');
+const slow = document.getElementById('slow'), auto = document.getElementById('auto'), handSel = document.getElementById('hand');
+strength.oninput = () => sv.textContent = (+strength.value).toFixed(1) + '×';
+let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
+const stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];
+function tap() { stages.forEach(s => { s.press = 1; s.tapT = clock; }); }
+stages.forEach(s => {
+  const at = e => { const r = s.canvas.getBoundingClientRect(); cursorN = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; lastMouse = performance.now(); };
+  s.canvas.addEventListener('pointermove', at);
+  s.canvas.addEventListener('pointerdown', e => { at(e); tap(); });
+});
+document.getElementById('tapBtn').onclick = tap;
+handSel.onchange = () => loadHand(handSel.value).then(a => asset = a);
+
+// Auto-tap: glide to the next spot, tap, repeat. One cycle per spot.
+const CYCLE = 1500;
+let spot = 0, autoFrom = spots[2];
+function autoStep(prev) {
+  const n = t => Math.floor((t - 0.5 * CYCLE) / CYCLE); // index of the last tap moment (half way through each cycle)
+  if (n(clock) > n(prev)) { tap(); autoFrom = spots[spot]; spot = (spot + 1) % spots.length; }
+  const phase = (clock % CYCLE) / CYCLE, target = spots[spot];
+  if (phase < 0.4) { const e = 0.5 - 0.5 * Math.cos(Math.PI * phase / 0.4); cursorN = { x: autoFrom.x + (target.x - autoFrom.x) * e, y: autoFrom.y + (target.y - autoFrom.y) * e }; }
+  else if (phase < 0.5) cursorN = { ...target };
+  else cursorN = { ...autoFrom };
+}
+
+function step(dt, colors) {
+  const prev = clock; clock += dt;
+  if (RECORD || (auto.checked && performance.now() - lastMouse > 2500)) autoStep(prev);
+  for (const s of stages) {
+    drawScreen(s, colors);
+    if (asset) drawArm(s, asset, { x: cursorN.x * s.W, y: cursorN.y * s.H }, dt);
+  }
+}
+
+// ---- Record mode: fixed-size frames, both areas side by side with labels ----
+const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#f4f3f7', panel: '#ffffff', ink: '#1d1b22', muted: '#55525e', line: '#dcd9e3', screen: '#eceaf1', dot: '#c9c4d6' };
+async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
+  const out = document.createElement('canvas');
+  const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.label + REC.h;
+  out.width = W * REC.d; out.height = H * REC.d;
+  const o = out.getContext('2d'); o.scale(REC.d, REC.d);
+  stages.forEach(s => sizeStage(s, REC.w, REC.h, REC.d));
+  const colors = { screen: REC.screen, dot: REC.dot };
+  for (let t = 0; t < warm * CYCLE; t += 1000 / fps) step(1000 / fps, colors); // settle into the loop
+  const frames = Math.round(fps * seconds);
+  for (let i = 0; i < frames; i++) {
+    step(1000 / fps, colors);
+    o.fillStyle = REC.bg; o.fillRect(0, 0, W, H);
+    stages.forEach((s, j) => {
+      const x = REC.pad + j * (REC.w + REC.pad), y = REC.pad;
+      o.save(); o.beginPath(); o.roundRect(x, y, REC.w, REC.label + REC.h, 10); o.fillStyle = REC.panel; o.fill(); o.clip();
+      o.drawImage(s.canvas, x, y + REC.label, REC.w, REC.h);
+      o.restore();
+      o.beginPath(); o.roundRect(x + 0.5, y + 0.5, REC.w - 1, REC.label + REC.h - 1, 10); o.strokeStyle = REC.line; o.stroke();
+      o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
+      o.fillText(j ? 'New' : 'Now', x + 12, y + REC.label / 2 + 1);
+      o.font = '400 13px Manrope, system-ui, sans-serif'; o.fillStyle = REC.muted; o.textAlign = 'right';
+      o.fillText(j ? 'lifts up, swings down' : 'shrinks a little', x + REC.w - 12, y + REC.label / 2 + 1);
+      o.textAlign = 'left';
+    });
+    const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+    await fetch(`/frame/${String(i).padStart(4, '0')}.png`, { method: 'POST', body: blob });
+  }
+  return frames;
+}
+window.recordFrames = recordFrames;
+
+loadHand('lavender').then(a => {
+  asset = a;
+  if (RECORD) return;
+  stages.forEach(s => sizeStage(s)); addEventListener('resize', () => stages.forEach(s => sizeStage(s)));
+  let last = performance.now();
+  const loop = t => {
+    const real = Math.min(50, t - last); last = t;
+    step(slow.checked ? real / 4 : real, { screen: css('--screen'), dot: css('--dot') });
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+});
+</script>
+</body>
+</html>

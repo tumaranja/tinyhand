@@ -5,3 +5,8 @@ dist/
 *.dmg
 *.zip
 assets/unused/
+
+# Local only
+.codegraph/
+.claude/launch.json
+prototypes/tap-motion/frames/

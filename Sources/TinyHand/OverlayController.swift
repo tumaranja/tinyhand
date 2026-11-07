@@ -68,7 +68,14 @@ final class OverlayController {
             }
             self.armView.press()
             self.armView.held = true
-            self.tapSound.play()
+            if self.armView.style == .laser {
+                self.tapSound.play()
+            } else {
+                // The hand winds up first; play the sound when the fingertip lands.
+                DispatchQueue.main.asyncAfter(deadline: .now() + ArmView.strikeDelay) { [weak self] in
+                    self?.tapSound.play()
+                }
+            }
             self.toolbar.hideHint()
             self.downPoint = self.localMouse()
             self.dragEvents = 0
