@@ -2,7 +2,7 @@
 
 A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that changes one thing: the tap motion. For everything else (download, install, how to use it), see the [original repo](https://github.com/nilbuild/tinyhand) and [tinyhand.app](https://tinyhand.app).
 
-In the original, a tap only shrinks the hand a little. Here the stick lifts up and swings down onto the spot, the way a real hand on a stick moves.
+In the original, tapping only shrinks the hand a little. Here the stick swings up and down, the way a real hand on a stick moves.
 
 <img src="./.github/tap-motion.gif" alt="Side by side: Before, the original tap only shrinks the hand a little; After, the hand swings up and down onto the spot." width="680" />
 
