@@ -4,7 +4,9 @@ Fork of [nilbuild/tinyhand](https://github.com/nilbuild/tinyhand), a macOS menu 
 
 - Remotes: `origin` = tumaranja/tinyhand (ours), `upstream` = nilbuild/tinyhand (the creators). Never push to `upstream`. Pull their updates with `git fetch upstream && git merge upstream/main`.
 - Build: `swift build` (needs full Xcode or a working Command Line Tools; `scripts/build-app.sh` makes the signed .app).
-- Tap motion: `ArmView.swing(at:)` in `Sources/TinyHand/ArmView.swift`. The prototype in `prototypes/tap-motion/` mirrors it; change both together, and re-record `.github/tap-motion.gif` (dark theme, `recordFrames()`; see README) when the motion changes.
+- Tap motion: `ArmView.swing(at:)` in `Sources/TinyHand/ArmView.swift`. The prototype in `prototypes/tap-motion/` mirrors it; change both together, and re-record `.github/tap-motion.gif` (below) when the motion changes.
+- Re-record the GIF: run `python3 prototypes/tap-motion/record_server.py`, open http://localhost:8766/prototypes/tap-motion/?record, run `await recordFrames()` in the console (dark theme by default; frames land in `prototypes/tap-motion/frames/`), then from that folder:
+  `ffmpeg -y -framerate 25 -i %04d.png -vf "scale=680:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 ../../../.github/tap-motion.gif`
 - The prototype is published to GitHub Pages by `.github/workflows/prototype-pages.yml`: https://tumaranja.github.io/tinyhand/prototypes/tap-motion/
 
 ## Decisions

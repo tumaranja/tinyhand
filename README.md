@@ -21,14 +21,6 @@ The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/Tin
 
 This fork has no app download of its own. The plan is to offer the change to the original as a pull request, so everyone gets it through TinyHand's normal updates.
 
-## Run the prototype locally
-
-```bash
-python3 prototypes/tap-motion/record_server.py
-```
-
-Then open [localhost:8766/prototypes/tap-motion/](http://localhost:8766/prototypes/tap-motion/). To re-record the GIF, open it with `?record`, run `recordFrames()` in the console, and turn the saved frames into a GIF with ffmpeg.
-
 ## License
 
 MIT, like the original. See [LICENSE](LICENSE). The original is © Kamran Ahmed; the swing tap changes are © tumaranja.
