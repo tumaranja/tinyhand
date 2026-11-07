@@ -15,17 +15,17 @@
 <style>
   :root {
     --bg: #ffffff; --panel: #ffffff; --ink: #000000; --muted: #555555;
-    --line: #dddddd; --screen: #f2f2f2; --dot: #cccccc; --accent: #000000; --on-accent: #ffffff;
+    --line: #dddddd; --screen: #ffffff; --dot: #cccccc; --accent: #000000; --on-accent: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #000000; --panel: #000000; --ink: #ffffff; --muted: #aaaaaa;
-      --line: #333333; --screen: #111111; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
+      --line: #333333; --screen: #000000; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
     }
   }
   :root[data-theme="dark"] {
     --bg: #000000; --panel: #000000; --ink: #ffffff; --muted: #aaaaaa;
-    --line: #333333; --screen: #111111; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
+    --line: #333333; --screen: #000000; --dot: #444444; --accent: #ffffff; --on-accent: #000000;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Manrope, system-ui, sans-serif; }
@@ -199,7 +199,7 @@ function step(dt, colors) {
 }
 
 // ---- Record mode: fixed-size frames, both areas side by side with labels ----
-const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#ffffff', panel: '#ffffff', ink: '#000000', muted: '#555555', line: '#dddddd', screen: '#f2f2f2', dot: '#cccccc' };
+const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#ffffff', panel: '#ffffff', ink: '#000000', muted: '#555555', line: '#dddddd', screen: '#ffffff', dot: '#cccccc' };
 async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
   const out = document.createElement('canvas');
   const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.label + REC.h;
