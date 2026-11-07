@@ -41,8 +41,8 @@
   input[type=range]:focus-visible { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--muted); }
   .stages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
-  figure { margin: 0; background: var(--panel); border-radius: 12px; overflow: hidden; }
-  figcaption { padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+  figure { position: relative; margin: 0; background: var(--panel); border-radius: 12px; overflow: hidden; }
+  figcaption { position: absolute; top: 0; left: 0; right: 0; z-index: 1; pointer-events: none; background: transparent; padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
   figcaption span { font-weight: 400; color: var(--muted); }
   canvas { display: block; width: 100%; aspect-ratio: 4 / 3; cursor: none; touch-action: none; }
   body.record main { padding: 0; max-width: none; }
@@ -116,7 +116,7 @@ function newMotion(t, k) {
   return { ...rest, press: Math.exp(-(t - A - B) / 120) };
 }
 
-const spots = [{ x: 0.3, y: 0.32 }, { x: 0.62, y: 0.5 }, { x: 0.36, y: 0.7 }];
+const spots = [{ x: 0.3, y: 0.55 }, { x: 0.64, y: 0.62 }, { x: 0.4, y: 0.7 }];
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function drawScreen(s, colors) {
   const { g, W, H } = s;
@@ -208,7 +208,7 @@ function step(dt, colors) {
 const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2, bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', line: '#dddddd', screen: '#ffffff', dot: '#cccccc' };
 async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
   const out = document.createElement('canvas');
-  const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.label + REC.h;
+  const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.h;
   out.width = W * REC.d; out.height = H * REC.d;
   const o = out.getContext('2d'); o.scale(REC.d, REC.d);
   stages.forEach(s => sizeStage(s, REC.w, REC.h, REC.d));
@@ -220,8 +220,8 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3 } = {}) {
     o.fillStyle = REC.bg; o.fillRect(0, 0, W, H);
     stages.forEach((s, j) => {
       const x = REC.pad + j * (REC.w + REC.pad), y = REC.pad;
-      o.save(); o.beginPath(); o.roundRect(x, y, REC.w, REC.label + REC.h, 10); o.fillStyle = REC.panel; o.fill(); o.clip();
-      o.drawImage(s.canvas, x, y + REC.label, REC.w, REC.h);
+      o.save(); o.beginPath(); o.roundRect(x, y, REC.w, REC.h, 10); o.fillStyle = REC.panel; o.fill(); o.clip();
+      o.drawImage(s.canvas, x, y, REC.w, REC.h);
       o.restore();
       o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
       o.fillText(j ? 'After' : 'Before', x + 12, y + REC.label / 2 + 1);
