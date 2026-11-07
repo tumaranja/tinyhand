@@ -34,9 +34,7 @@
   p.sub { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
   .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 14px; font-size: 14px; }
   .controls label { display: inline-flex; gap: 6px; align-items: center; }
-  select, input[type=range] { accent-color: var(--accent); }
-  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
-  button { font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 8px; border: 0; background: var(--accent); color: var(--on-accent); cursor: pointer; }
+  input[type=range] { accent-color: var(--accent); }
   .stages { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
   figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
@@ -50,19 +48,9 @@
 <body>
 <main>
   <h1>Tap motion: now vs new</h1>
-  <p class="sub">Move over either area and click to tap. Both hands follow the same pointer.</p>
+  <p class="sub">It taps by itself. Move over either area and click to tap yourself; both hands follow the same pointer.</p>
   <div class="controls">
-    <label>Hand <select id="hand">
-      <option value="lavender">Lavender toy</option>
-      <option value="black">Black</option>
-      <option value="glove">Glove</option>
-      <option value="robot">Robot</option>
-      <option value="coral">Coral</option>
-    </select></label>
     <label>Strength <input id="strength" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
-    <label><input id="slow" type="checkbox"> Slow motion</label>
-    <label><input id="auto" type="checkbox" checked> Auto-tap</label>
-    <button id="tapBtn" type="button">Tap</button>
   </div>
   <div class="stages">
     <figure><figcaption>Now <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
@@ -180,7 +168,6 @@ function drawArm(s, a, cursor, dt) {
 
 // ---- Controls and clock ----
 const strength = document.getElementById('strength'), sv = document.getElementById('sv');
-const slow = document.getElementById('slow'), auto = document.getElementById('auto'), handSel = document.getElementById('hand');
 strength.oninput = () => sv.textContent = (+strength.value).toFixed(1) + '×';
 let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
 const stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];
@@ -190,8 +177,6 @@ stages.forEach(s => {
   s.canvas.addEventListener('pointermove', at);
   s.canvas.addEventListener('pointerdown', e => { at(e); tap(); });
 });
-document.getElementById('tapBtn').onclick = tap;
-handSel.onchange = () => loadHand(handSel.value).then(a => asset = a);
 
 // Auto-tap: glide to the next spot, tap, repeat. One cycle per spot.
 const CYCLE = 1500;
@@ -207,7 +192,7 @@ function autoStep(prev) {
 
 function step(dt, colors) {
   const prev = clock; clock += dt;
-  if (RECORD || (auto.checked && performance.now() - lastMouse > 2500)) autoStep(prev);
+  if (RECORD || performance.now() - lastMouse > 2500) autoStep(prev);
   for (const s of stages) {
     drawScreen(s, colors);
     if (asset) drawArm(s, asset, { x: cursorN.x * s.W, y: cursorN.y * s.H }, dt);
@@ -254,7 +239,7 @@ loadHand('lavender').then(a => {
   let last = performance.now();
   const loop = t => {
     const real = Math.min(50, t - last); last = t;
-    step(slow.checked ? real / 4 : real, { screen: css('--screen'), dot: css('--dot') });
+    step(real, { screen: css('--screen'), dot: css('--dot') });
     requestAnimationFrame(loop);
   };
   requestAnimationFrame(loop);
