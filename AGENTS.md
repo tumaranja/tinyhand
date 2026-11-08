@@ -8,7 +8,7 @@ Fork of [nilbuild/tinyhand](https://github.com/nilbuild/tinyhand), a macOS menu 
 - Re-record the GIF: run `python3 prototypes/tap-motion/record_server.py`, open http://localhost:8766/prototypes/tap-motion/?record, run `await recordFrames()` in the console (dark theme by default; frames land in `prototypes/tap-motion/frames/`), then from that folder:
   `ffmpeg -y -framerate 25 -i %04d.png -vf "scale=680:-1:flags=lanczos,split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=5" -loop 0 ../../../.github/tap-motion.gif`
 - Toolbar images `.github/toolbar-before.png` / `toolbar-after.png`: compile only the toolbar files with `scripts/fork/render-toolbar/main.swift` (full builds need SwiftPM; this works with plain `swiftc`), from the repo root so hand assets load:
-  `swiftc -D SWING_RANGE Sources/TinyHand/{Toolbar,AppKitHelpers,Preferences,PointerStyle,Ink,Log,HandMaker,TapSound}.swift scripts/fork/render-toolbar/main.swift -o /tmp/tb && /tmp/tb /tmp/after.png` (drop `-D SWING_RANGE` and use `upstream/main` sources for "before"), then place the `-range.png` tray 8 pt above the Swing range button.
+  `swiftc -D SWING_RANGE Sources/TinyHand/{Toolbar,AppKitHelpers,Preferences,PointerStyle,Ink,Log,HandMaker,TapSound}.swift scripts/fork/render-toolbar/main.swift -o /tmp/tb && /tmp/tb /tmp/after.png` (drop `-D SWING_RANGE` and use `upstream/main` sources for "before"), then place the `-range.png` tray 8 pt above the Swing range button; both images share one canvas size, toolbars aligned left.
 - The prototype is published to GitHub Pages by `.github/workflows/prototype-pages.yml`: https://tumaranja.github.io/tinyhand/prototypes/tap-motion/
 
 ## Decisions
