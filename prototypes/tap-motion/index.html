@@ -115,7 +115,7 @@ function newMotion(t, k) {
   return { ...rest, press: Math.exp(-(t - A - B) / 120) };
 }
 
-const spots = [{ x: 0.3, y: 0.55 }, { x: 0.64, y: 0.62 }, { x: 0.4, y: 0.7 }];
+const spots = [{ x: 0.22, y: 0.55 }, { x: 0.56, y: 0.62 }, { x: 0.32, y: 0.7 }];
 function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 function drawScreen(s, colors) {
   const { g, W, H } = s;
