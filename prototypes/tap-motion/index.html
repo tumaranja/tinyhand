@@ -43,7 +43,7 @@
   @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
   figure { position: relative; margin: 0; background: var(--panel); border-radius: 12px; overflow: hidden; }
   figcaption { position: absolute; top: 0; left: 0; right: 0; z-index: 1; pointer-events: none; background: transparent; padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
-  canvas { display: block; width: 100%; aspect-ratio: 4 / 3; cursor: none; touch-action: none; }
+  canvas { display: block; width: 100%; aspect-ratio: 10 / 11; cursor: none; touch-action: none; }
   body.record main { padding: 0; max-width: none; }
   body.record h1, body.record p.sub, body.record .controls, body.record .stages { display: none; }
 </style>
@@ -93,6 +93,8 @@ function loadHand(name) {
 // ---- Geometry: same as ArmView.aim. The small area is a crop of a bigger screen,
 // so fractions of the screen height use S = ZOOM * area height. ----
 const ZOOM = 2.4, CROP_Y = 0.35;
+// Sizes follow the width (a 4:3 area), so a taller area only adds headroom for big swings.
+const baseH = s => s.W * 0.75;
 const handLenFrac = 0.13, gripLeanFrac = 0.30, gripDepthFrac = 0.12, gripFollow = 0.08, liftFrac = 0.06, minRodFrac = 0.05;
 function makeStage(canvas, kind) { return { canvas, g: canvas.getContext('2d'), kind, gripX: null, press: 0, tapT: null }; }
 function sizeStage(s, w, h, d) {
@@ -123,7 +125,7 @@ function drawScreen(s, colors) {
 }
 
 function drawArm(s, a, cursor, dt) {
-  const { g, W, H } = s, k = +swingRange.value, S = H * ZOOM;
+  const { g, W, H } = s, k = +swingRange.value, S = baseH(s) * ZOOM;
   const cur = { x: cursor.x, y: H - cursor.y }; // y-up like AppKit
   const targetX = Math.min(Math.max(cur.x + gripLeanFrac * S * 1.6, W * 0.15), W + S * 0.3);
   s.gripX = s.gripX == null ? targetX : s.gripX + (targetX - s.gripX) * (1 - Math.pow(1 - gripFollow, dt / 16.67));
@@ -200,10 +202,13 @@ function autoStep(prev) {
 
 function step(dt, colors) {
   const prev = clock; clock += dt;
-  if (RECORD || performance.now() - lastMouse > 2500) autoStep(prev);
+  const auto = RECORD || performance.now() - lastMouse > 2500;
+  if (auto) autoStep(prev);
   for (const s of stages) {
     drawScreen(s, colors);
-    if (asset) drawArm(s, asset, { x: cursorN.x * s.W, y: cursorN.y * s.H }, dt);
+    // Auto-tap spots are fractions of the 4:3 base area, measured up from the bottom edge.
+    const y = auto ? s.H - (1 - cursorN.y) * baseH(s) : cursorN.y * s.H;
+    if (asset) drawArm(s, asset, { x: cursorN.x * s.W, y }, dt);
   }
 }
 
