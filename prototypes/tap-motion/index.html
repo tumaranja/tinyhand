@@ -52,7 +52,7 @@
 <main>
   <h1>Tap motion</h1>
   <div class="controls">
-    <label>Swing range <input id="swingRange" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
+    <label>Swing range <input id="swingRange" type="range" min="0" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
     <figure><figcaption>Before</figcaption><canvas id="cNow"></canvas></figure>
@@ -129,8 +129,10 @@ function drawArm(s, a, cursor, dt) {
   s.gripX = s.gripX == null ? targetX : s.gripX + (targetX - s.gripX) * (1 - Math.pow(1 - gripFollow, dt / 16.67));
   const grip = { x: s.gripX, y: -(gripDepthFrac + CROP_Y) * S }; // the area sits CROP_Y above the screen's bottom edge
 
+  // Swing range 0 is the original tap, same as the Before side.
+  const classic = s.kind === 'now' || k <= 0.001;
   let press, m = null;
-  if (s.kind === 'now') {
+  if (classic) {
     s.press += (0 - s.press) * (1 - Math.pow(1 - 0.18, dt / 16.67));
     press = s.press;
   } else {
@@ -144,7 +146,7 @@ function drawArm(s, a, cursor, dt) {
   dy = dy - dy / dist * poke + (m ? m.uy * S : 0);
   const reach = Math.hypot(dx, dy), aimAngle = Math.atan2(dy, dx);
 
-  const handPts = handLenFrac * S * (1 - (s.kind === 'now' ? 0.06 : 0.10) * press);
+  const handPts = handLenFrac * S * (1 - (classic ? 0.06 : 0.10) * press);
   const sc = handPts / (a.wrist - a.handTop), widthPts = sc * a.aspect;
   const handTipPts = (a.wrist - a.tip) * sc, tipOffX = (a.tipX - a.rodX) * widthPts;
   const along = Math.sqrt(Math.max(0, reach * reach - tipOffX * tipOffX));
@@ -171,7 +173,7 @@ function drawArm(s, a, cursor, dt) {
 // ---- Controls and clock ----
 const swingRange = document.getElementById('swingRange'), sv = document.getElementById('sv');
 const fill = () => swingRange.style.setProperty('--fill', (swingRange.value - swingRange.min) / (swingRange.max - swingRange.min) * 100 + '%');
-swingRange.oninput = () => { sv.textContent = (+swingRange.value).toFixed(1) + '×'; fill(); };
+swingRange.oninput = () => { sv.textContent = +swingRange.value < 0.025 ? 'Off' : (+swingRange.value).toFixed(1) + '×'; fill(); };
 fill();
 let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
 const stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];

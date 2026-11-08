@@ -16,7 +16,7 @@ This repo is the source of a pull request to the original app. If it gets accept
 - **Swing down (0.09 s):** it swings down onto the spot and presses, then settles back. There's no wobble.
 - **Sound:** the tap sound plays when the fingertip lands. The laser pointer is unchanged.
 - **Drawing:** dragging skips straight to the pressed pose, so ink starts where you clicked.
-- **Swing range:** a new button in the toolbar at the bottom of the screen opens a slider from 0.3× to 2×. It scales how far the stick swings; 1× is the default.
+- **Swing range:** a new button in the toolbar at the bottom of the screen opens a slider from Off to 2×. Off keeps the original tap exactly; 1× is the default.
 
 The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/TinyHand/ArmView.swift). The browser prototype in [prototypes/tap-motion](prototypes/tap-motion) mirrors it.
 

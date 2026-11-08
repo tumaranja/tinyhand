@@ -68,11 +68,12 @@ final class OverlayController {
             }
             self.armView.press()
             self.armView.held = true
-            if self.armView.style == .laser {
+            let delay = self.armView.tapSoundDelay
+            if delay == 0 {
                 self.tapSound.play()
             } else {
-                // The hand winds up first; play the sound when the fingertip lands.
-                DispatchQueue.main.asyncAfter(deadline: .now() + ArmView.strikeDelay) { [weak self] in
+                // The hand swings up first; play the sound when the fingertip lands.
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
                     self?.tapSound.play()
                 }
             }

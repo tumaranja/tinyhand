@@ -99,9 +99,10 @@ enum Preferences {
         set { set(Double(newValue), "pointerSize") }
     }
 
-    static let swingRangeLimits: ClosedRange<Double> = 0.3...2
+    static let swingRangeLimits: ClosedRange<Double> = 0...2
 
-    /// How far the stick swings up on a tap; 1 lifts the fingertip about 20% of the screen height.
+    /// How far the stick swings up on a tap. 0 keeps the original tap (the hand only shrinks a little);
+    /// 1 lifts the fingertip about 20% of the screen height.
     static var swingRange: Double {
         get { defaults.object(forKey: "swingRange") as? Double ?? 1 }
         set { set(min(max(newValue, swingRangeLimits.lowerBound), swingRangeLimits.upperBound), "swingRange") }

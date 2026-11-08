@@ -131,9 +131,15 @@ final class ArmView: NSView {
         fatalError("init(coder:) not used")
     }
 
+    /// At swing range 0 the tap is the original one: no swing, just the small shrink.
+    private var swings: Bool { swingRange > 0.001 }
+
+    /// How long the tap sound waits so it plays when the fingertip lands.
+    var tapSoundDelay: CFTimeInterval { swings && style != .laser ? ArmView.strikeDelay : 0 }
+
     func press() {
         pressAmount = 1
-        tapStart = CACurrentMediaTime()
+        tapStart = swings ? CACurrentMediaTime() : nil
     }
 
     /// Jump straight to the moment the fingertip touches (used when a drag starts, and by renders).
@@ -223,7 +229,9 @@ final class ArmView: NSView {
         let reach = hypot(dx, dy)
         let aimAngle = atan2(dy, dx)
 
-        let handPts = handLenFrac * screenH * (1 - 0.10 * sw.press)
+        // Swing range 0 keeps the original press: pressAmount and a 6% shrink.
+        let press = swings ? sw.press : pressAmount
+        let handPts = handLenFrac * screenH * (1 - (swings ? 0.10 : 0.06) * press)
         let s = handPts / (a.wrist - a.handTop)
         let widthPts = s * a.aspect
         let handTipPts = (a.wrist - a.tip) * s
@@ -235,8 +243,8 @@ final class ArmView: NSView {
         let tipAngle = atan2(rodLen + handTipPts, tipOffX)
         let rotation = aimAngle - tipAngle + sw.tilt
 
-        let lift = liftFrac * screenH * (1 - 0.8 * sw.press)
-        let pressed = max(0, sw.press)
+        let lift = liftFrac * screenH * (1 - 0.8 * press)
+        let pressed = max(0, press)
         let sx = lift * 0.6
         let sy = -lift
         let shadowOffset = CGSize(
@@ -244,7 +252,7 @@ final class ArmView: NSView {
             height: sx * sin(-rotation) + sy * cos(-rotation)
         )
 
-        let pose = [rotation, rodLen, handPts, widthPts, grip.x, grip.y, lift, sw.press, showShadow ? 1 : 0, a.aspect]
+        let pose = [rotation, rodLen, handPts, widthPts, grip.x, grip.y, lift, press, showShadow ? 1 : 0, a.aspect]
             .map { ($0 * 100).rounded() }
         guard pose != lastPose else {
             return

@@ -281,7 +281,7 @@ final class Toolbar {
         if let slider = rangeSlider, abs(slider.doubleValue - k) > 0.05 {
             slider.doubleValue = k
         }
-        rangeLabel?.stringValue = String(format: "%.1f×", k)
+        rangeLabel?.stringValue = k < 0.025 ? "Off" : String(format: "%.1f×", k)
     }
 
     private func setInkOpen(_ open: Bool) {

@@ -15,7 +15,7 @@ Fork of [nilbuild/tinyhand](https://github.com/nilbuild/tinyhand), a macOS menu 
 
 - 2026-11-07: Tap is a swing, not a shrink: the fingertip lifts 0.2 × screen height (and 0.025 right), the holding hand rises 45% of that with it, over 0.13 s; then it swings down in 0.09 s and presses. No wobble, and the holding hand does not follow the pointer up and down between taps (tried, rejected). The tap sound waits for contact (`ArmView.strikeDelay`); the laser dot is unchanged.
 - 2026-11-07: Own fork only, no pull request to the creators for now.
-- 2026-11-08: Swing range is a setting in the app: a `hand.tap` button in the bottom toolbar opens a slider tray (0.3×–2×, default 1×, `Preferences.swingRange`). It scales the swing's lift, poke and tilt, like the prototype's slider.
+- 2026-11-08: Swing range is a setting in the app: a `hand.tap` button in the bottom toolbar opens a slider tray (0–2×, default 1×, `Preferences.swingRange`). It scales the swing's lift, poke and tilt, like the prototype's slider. At 0 (shown as "Off") the tap is exactly the original: no swing, the old 6% shrink and the sound at once.
 - 2026-11-08: Plan is to offer the swing tap to the creators as a pull request (only the Swift changes, after building and testing the app). The fork's README only supplements the original: what the fork changes, the dark GIF and a link to the hosted prototype; install and usage stay in the original repo.
 
 ## Sync
