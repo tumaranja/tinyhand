@@ -22,7 +22,7 @@ The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/Tin
 
 ## Toolbar
 
-The toolbar at the bottom of the screen gets one new button, Tap strength. It opens a slider in the toolbar's own style, like the ink colour picker.
+The toolbar at the bottom of the screen gets a new button, Tap strength. It controls how much the stick swings on tap.
 
 **Before**
 
