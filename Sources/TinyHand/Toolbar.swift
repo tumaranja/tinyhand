@@ -26,7 +26,9 @@ final class Toolbar {
             NSColor(white: 1, alpha: 0.18).setFill()
             NSBezierPath(roundedRect: bar, xRadius: 2, yRadius: 2).fill()
             var filled = bar
-            filled.size.width = max(0, knobRect(flipped: flipped).midX - bar.minX)
+            let span = maxValue - minValue
+            let t = span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
+            filled.size.width = t * bar.width // empty at Off, full at the top end
             NSColor(white: 1, alpha: 0.85).setFill()
             NSBezierPath(roundedRect: filled, xRadius: 2, yRadius: 2).fill()
         }
@@ -36,7 +38,7 @@ final class Toolbar {
             let bar = barRect(flipped: flipped)
             let span = maxValue - minValue
             let t = span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
-            let pad: CGFloat = 12
+            let pad: CGFloat = 18
             let cx = bar.minX + pad + t * (bar.width - 2 * pad)
             return NSRect(x: cx - 10, y: bar.midY - 10, width: 20, height: 20)
         }
