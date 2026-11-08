@@ -2,7 +2,7 @@
 
 A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that changes one thing: the tap motion. For everything else (download, install, how to use it), see the [original repo](https://github.com/nilbuild/tinyhand).
 
-In the original, tapping only shrinks the hand a little. Here the stick swings up and down, the way a real hand on a stick moves.
+In the original, tapping only shrinks the hand a little. Here the stick swings up and down, the way a real hand on a stick moves. There's no app download of its own: the plan is to offer the change to the original as a pull request, so everyone gets it through TinyHand's normal updates.
 
 [Try it in your browser →](https://tumaranja.github.io/tinyhand/prototypes/tap-motion/)
 
@@ -17,10 +17,6 @@ In the original, tapping only shrinks the hand a little. Here the stick swings u
 - **Tap strength:** a new button in the toolbar at the bottom of the screen opens a slider from 0.3× to 2×. It scales how far the stick swings; 1× is the default.
 
 The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/TinyHand/ArmView.swift). The browser prototype in [prototypes/tap-motion](prototypes/tap-motion) mirrors it.
-
-## Status
-
-This fork has no app download of its own. The plan is to offer the change to the original as a pull request, so everyone gets it through TinyHand's normal updates.
 
 ## License
 
