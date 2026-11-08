@@ -43,7 +43,6 @@
   @media (max-width: 640px) { .stages { grid-template-columns: 1fr; } }
   figure { position: relative; margin: 0; background: var(--panel); border-radius: 12px; overflow: hidden; }
   figcaption { position: absolute; top: 0; left: 0; right: 0; z-index: 1; pointer-events: none; background: transparent; padding: 10px 14px; font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
-  figcaption span { font-weight: 400; color: var(--muted); }
   canvas { display: block; width: 100%; aspect-ratio: 4 / 3; cursor: none; touch-action: none; }
   body.record main { padding: 0; max-width: none; }
   body.record h1, body.record p.sub, body.record .controls, body.record .stages { display: none; }
@@ -56,8 +55,8 @@
     <label>Swing range <input id="swingRange" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
-    <figure><figcaption>Before <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
-    <figure><figcaption>After <span>swings up and down</span></figcaption><canvas id="cNew"></canvas></figure>
+    <figure><figcaption>Before</figcaption><canvas id="cNow"></canvas></figure>
+    <figure><figcaption>After</figcaption><canvas id="cNew"></canvas></figure>
   </div>
 </main>
 <script>
@@ -209,8 +208,10 @@ const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2 };
 const REC_THEMES = {
   light: { bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', screen: '#ffffff', dot: '#cccccc' },
   dark: { bg: '#000000', panel: '#1a1a1a', ink: '#ffffff', muted: '#aaaaaa', screen: '#1a1a1a', dot: '#444444' },
+  // GitHub's dark page colour, so the GIF sits seamlessly in the README: one colour, no cards.
+  github: { bg: '#0d1117', panel: '#0d1117', ink: '#f0f6fc', muted: '#9198a1', screen: '#0d1117', dot: '#3d444d' },
 };
-async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'dark' } = {}) {
+async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'github' } = {}) {
   Object.assign(REC, REC_THEMES[theme]);
   const out = document.createElement('canvas');
   const W = REC.pad * 3 + REC.w * 2, H = REC.pad * 2 + REC.h;
@@ -230,9 +231,6 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'dark' 
       o.restore();
       o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
       o.fillText(j ? 'After' : 'Before', x + 12, y + REC.label / 2 + 1);
-      o.font = '400 13px Manrope, system-ui, sans-serif'; o.fillStyle = REC.muted; o.textAlign = 'right';
-      o.fillText(j ? 'swings up and down' : 'shrinks a little', x + REC.w - 12, y + REC.label / 2 + 1);
-      o.textAlign = 'left';
     });
     const blob = await new Promise(r => out.toBlob(r, 'image/png'));
     await fetch(`/frame/${String(i).padStart(4, '0')}.png`, { method: 'POST', body: blob });
