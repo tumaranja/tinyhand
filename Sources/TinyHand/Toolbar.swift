@@ -56,11 +56,11 @@ final class Toolbar {
     private var inkOpen = false
     private let permissionButton = Button()
     private var soundButton: Button?
-    private var strengthButton: Button?
-    private var strengthTray: Panel?
-    private var strengthSlider: Slider?
-    private var strengthLabel: NSTextField?
-    private var strengthOpen = false
+    private var rangeButton: Button?
+    private var rangeTray: Panel?
+    private var rangeSlider: Slider?
+    private var rangeLabel: NSTextField?
+    private var rangeOpen = false
     private(set) var revealed = false
 
     private let tray: Panel
@@ -69,7 +69,7 @@ final class Toolbar {
 
     var frame: CGRect {
         var f = inkOpen ? panel.frame.union(tray.frame) : panel.frame
-        if strengthOpen, let t = strengthTray {
+        if rangeOpen, let t = rangeTray {
             f = f.union(t.frame)
         }
         return f
@@ -134,11 +134,11 @@ final class Toolbar {
         }
         inkButton = ink
         stack.addArrangedSubview(ink)
-        let strength = makeButton(symbol: "hand.tap", tip: "Tap strength") { [weak self] in
-            self?.setStrengthOpen(!(self?.strengthOpen ?? true))
+        let rangeButtonView = makeButton(symbol: "hand.tap", tip: "Swing range") { [weak self] in
+            self?.setSwingRangeOpen(!(self?.rangeOpen ?? true))
         }
-        strengthButton = strength
-        stack.addArrangedSubview(strength)
+        rangeButton = rangeButtonView
+        stack.addArrangedSubview(rangeButtonView)
         let sound = makeButton(symbol: "speaker.wave.2.fill", tip: "Tap sound") { [weak self] in
             self?.onToggleSound?()
         }
@@ -174,7 +174,7 @@ final class Toolbar {
         NotificationCenter.default.addObserver(forName: Preferences.changed, object: nil, queue: .main) { [weak self] _ in
             self?.rebuildStyles()
             self?.refreshInk()
-            self?.refreshStrength()
+            self?.refreshSwingRange()
         }
     }
 
@@ -183,16 +183,16 @@ final class Toolbar {
     }
 
     /// A small tray above the toolbar with a slider for how far the stick swings up on a tap.
-    private func setStrengthOpen(_ open: Bool) {
-        guard open != strengthOpen, let button = strengthButton else {
+    private func setSwingRangeOpen(_ open: Bool) {
+        guard open != rangeOpen, let button = rangeButton else {
             return
         }
-        strengthOpen = open
+        rangeOpen = open
         button.layer?.backgroundColor = open ? NSColor(white: 1, alpha: 0.18).cgColor : NSColor.clear.cgColor
-        let t = strengthTray ?? makeStrengthTray()
+        let t = rangeTray ?? makeSwingRangeTray()
         if open {
             setInkOpen(false)
-            refreshStrength()
+            refreshSwingRange()
             let r = panel.convertToScreen(button.convert(button.bounds, to: nil))
             let size = t.frame.size
             t.setFrameOrigin(CGPoint(x: r.midX - size.width / 2, y: panel.frame.maxY + 8))
@@ -207,7 +207,7 @@ final class Toolbar {
                 ctx.duration = 0.12
                 t.animator().alphaValue = 0
             }, completionHandler: { [weak self] in
-                guard let self = self, !self.strengthOpen else {
+                guard let self = self, !self.rangeOpen else {
                     return
                 }
                 t.orderOut(nil)
@@ -215,7 +215,7 @@ final class Toolbar {
         }
     }
 
-    private func makeStrengthTray() -> Panel {
+    private func makeSwingRangeTray() -> Panel {
         let t = Panel(contentRect: CGRect(x: 0, y: 0, width: 260, height: 40),
                       styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         t.isOpaque = false
@@ -230,24 +230,16 @@ final class Toolbar {
         let background = NSVisualEffectView.darkGlass(radius: 14)
         t.contentView = background
 
-        // Same pattern as the pointer Size slider in Settings: a small and a big symbol either side.
-        func symbol(_ size: CGFloat) -> NSImageView {
-            let config = NSImage.SymbolConfiguration(pointSize: size, weight: .medium)
-            let v = NSImageView(image: NSImage(systemSymbolName: "hand.tap", accessibilityDescription: nil)?
-                .withSymbolConfiguration(config) ?? NSImage())
-            v.contentTintColor = NSColor(white: 1, alpha: 0.6)
-            return v
-        }
         let slider = Slider()
         slider.cell = SliderCell()
-        slider.minValue = Preferences.tapStrengthRange.lowerBound
-        slider.maxValue = Preferences.tapStrengthRange.upperBound
-        slider.doubleValue = Preferences.tapStrength
+        slider.minValue = Preferences.swingRangeLimits.lowerBound
+        slider.maxValue = Preferences.swingRangeLimits.upperBound
+        slider.doubleValue = Preferences.swingRange
         slider.target = self
-        slider.action = #selector(strengthChanged(_:))
+        slider.action = #selector(swingRangeChanged(_:))
         slider.isContinuous = true
-        slider.toolTip = "Tap strength"
-        slider.setAccessibilityLabel("Tap strength")
+        slider.toolTip = "Swing range"
+        slider.setAccessibilityLabel("Swing range")
         slider.widthAnchor.constraint(equalToConstant: 140).isActive = true
         slider.heightAnchor.constraint(equalToConstant: 30).isActive = true
         let value = NSTextField(labelWithString: "1.0×")
@@ -256,7 +248,7 @@ final class Toolbar {
         value.alignment = .right
         value.widthAnchor.constraint(equalToConstant: 34).isActive = true
 
-        let row = NSStackView(views: [symbol(11), slider, symbol(16), value])
+        let row = NSStackView(views: [slider, value])
         row.orientation = .horizontal
         row.spacing = 10
         row.edgeInsets = NSEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
@@ -272,24 +264,24 @@ final class Toolbar {
         row.layoutSubtreeIfNeeded()
         t.setContentSize(row.fittingSize)
 
-        strengthTray = t
-        strengthSlider = slider
-        strengthLabel = value
+        rangeTray = t
+        rangeSlider = slider
+        rangeLabel = value
         return t
     }
 
-    @objc private func strengthChanged(_ sender: NSSlider) {
+    @objc private func swingRangeChanged(_ sender: NSSlider) {
         let rounded = (sender.doubleValue * 20).rounded() / 20
-        Preferences.tapStrength = rounded
-        refreshStrength()
+        Preferences.swingRange = rounded
+        refreshSwingRange()
     }
 
-    private func refreshStrength() {
-        let k = Preferences.tapStrength
-        if let slider = strengthSlider, abs(slider.doubleValue - k) > 0.05 {
+    private func refreshSwingRange() {
+        let k = Preferences.swingRange
+        if let slider = rangeSlider, abs(slider.doubleValue - k) > 0.05 {
             slider.doubleValue = k
         }
-        strengthLabel?.stringValue = String(format: "%.1f×", k)
+        rangeLabel?.stringValue = String(format: "%.1f×", k)
     }
 
     private func setInkOpen(_ open: Bool) {
@@ -298,7 +290,7 @@ final class Toolbar {
         }
         inkOpen = open
         if open {
-            setStrengthOpen(false)
+            setSwingRangeOpen(false)
             if swatches.isEmpty {
                 for choice in InkChoice.allCases {
                     let b = makeButton(image: nil, tip: choice.title, side: 30) { [weak self] in
@@ -422,9 +414,9 @@ final class Toolbar {
         return rep
     }
 
-    func snapshotStrengthTray() -> NSBitmapImageRep? {
-        setStrengthOpen(true)
-        guard let view = strengthTray?.contentView else {
+    func snapshotSwingRangeTray() -> NSBitmapImageRep? {
+        setSwingRangeOpen(true)
+        guard let view = rangeTray?.contentView else {
             return nil
         }
         view.layer?.backgroundColor = NSColor(white: 0.16, alpha: 1).cgColor
@@ -559,7 +551,7 @@ final class Toolbar {
 
     func hide() {
         setInkOpen(false)
-        setStrengthOpen(false)
+        setSwingRangeOpen(false)
         hideHint()
         revealed = false
         panel.alphaValue = 0
@@ -573,7 +565,7 @@ final class Toolbar {
         revealed = value
         if !value {
             setInkOpen(false)
-            setStrengthOpen(false)
+            setSwingRangeOpen(false)
         }
         panel.ignoresMouseEvents = !value
         NSAnimationContext.runAnimationGroup { ctx in

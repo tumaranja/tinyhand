@@ -53,7 +53,7 @@
 <main>
   <h1>Tap motion</h1>
   <div class="controls">
-    <label>Tap strength <input id="strength" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
+    <label>Swing range <input id="swingRange" type="range" min="0.3" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
     <figure><figcaption>Before <span>shrinks a little</span></figcaption><canvas id="cNow"></canvas></figure>
@@ -124,7 +124,7 @@ function drawScreen(s, colors) {
 }
 
 function drawArm(s, a, cursor, dt) {
-  const { g, W, H } = s, k = +strength.value, S = H * ZOOM;
+  const { g, W, H } = s, k = +swingRange.value, S = H * ZOOM;
   const cur = { x: cursor.x, y: H - cursor.y }; // y-up like AppKit
   const targetX = Math.min(Math.max(cur.x + gripLeanFrac * S * 1.6, W * 0.15), W + S * 0.3);
   s.gripX = s.gripX == null ? targetX : s.gripX + (targetX - s.gripX) * (1 - Math.pow(1 - gripFollow, dt / 16.67));
@@ -170,9 +170,9 @@ function drawArm(s, a, cursor, dt) {
 }
 
 // ---- Controls and clock ----
-const strength = document.getElementById('strength'), sv = document.getElementById('sv');
-const fill = () => strength.style.setProperty('--fill', (strength.value - strength.min) / (strength.max - strength.min) * 100 + '%');
-strength.oninput = () => { sv.textContent = (+strength.value).toFixed(1) + '×'; fill(); };
+const swingRange = document.getElementById('swingRange'), sv = document.getElementById('sv');
+const fill = () => swingRange.style.setProperty('--fill', (swingRange.value - swingRange.min) / (swingRange.max - swingRange.min) * 100 + '%');
+swingRange.oninput = () => { sv.textContent = (+swingRange.value).toFixed(1) + '×'; fill(); };
 fill();
 let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
 const stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];
