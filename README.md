@@ -1,4 +1,4 @@
-# TinyHand: swing tap
+# TinyHand: expressive tap motion
 
 A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that changes one thing: the tap motion. For everything else (download, install, how to use it), see the [original repo](https://github.com/nilbuild/tinyhand).
 
