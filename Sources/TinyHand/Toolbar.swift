@@ -15,6 +15,10 @@ final class Toolbar {
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     }
 
+    private final class Slider: NSSlider {
+        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    }
+
     private let panel: Panel
     private let stack = NSStackView()
     private var styleButtons: [PointerStyle: Button] = [:]
@@ -25,13 +29,24 @@ final class Toolbar {
     private var inkOpen = false
     private let permissionButton = Button()
     private var soundButton: Button?
+    private var strengthButton: Button?
+    private var strengthTray: Panel?
+    private var strengthSlider: Slider?
+    private var strengthLabel: NSTextField?
+    private var strengthOpen = false
     private(set) var revealed = false
 
     private let tray: Panel
     private let trayStack = NSStackView()
     private var hint: Panel?
 
-    var frame: CGRect { inkOpen ? panel.frame.union(tray.frame) : panel.frame }
+    var frame: CGRect {
+        var f = inkOpen ? panel.frame.union(tray.frame) : panel.frame
+        if strengthOpen, let t = strengthTray {
+            f = f.union(t.frame)
+        }
+        return f
+    }
 
     init() {
         panel = Panel(contentRect: CGRect(x: 0, y: 0, width: 300, height: 56),
@@ -92,6 +107,11 @@ final class Toolbar {
         }
         inkButton = ink
         stack.addArrangedSubview(ink)
+        let strength = makeButton(symbol: "hand.tap", tip: "Tap strength") { [weak self] in
+            self?.setStrengthOpen(!(self?.strengthOpen ?? true))
+        }
+        strengthButton = strength
+        stack.addArrangedSubview(strength)
         let sound = makeButton(symbol: "speaker.wave.2.fill", tip: "Tap sound") { [weak self] in
             self?.onToggleSound?()
         }
@@ -127,11 +147,113 @@ final class Toolbar {
         NotificationCenter.default.addObserver(forName: Preferences.changed, object: nil, queue: .main) { [weak self] _ in
             self?.rebuildStyles()
             self?.refreshInk()
+            self?.refreshStrength()
         }
     }
 
     private func toggleInk() {
         setInkOpen(!inkOpen)
+    }
+
+    /// A small tray above the toolbar with a slider for how far the stick swings up on a tap.
+    private func setStrengthOpen(_ open: Bool) {
+        guard open != strengthOpen, let button = strengthButton else {
+            return
+        }
+        strengthOpen = open
+        button.layer?.backgroundColor = open ? NSColor(white: 1, alpha: 0.18).cgColor : NSColor.clear.cgColor
+        let t = strengthTray ?? makeStrengthTray()
+        if open {
+            setInkOpen(false)
+            refreshStrength()
+            let r = panel.convertToScreen(button.convert(button.bounds, to: nil))
+            let size = t.frame.size
+            t.setFrameOrigin(CGPoint(x: r.midX - size.width / 2, y: panel.frame.maxY + 8))
+            t.invalidateShadow()
+            t.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.12
+                t.animator().alphaValue = 1
+            }
+        } else {
+            NSAnimationContext.runAnimationGroup({ ctx in
+                ctx.duration = 0.12
+                t.animator().alphaValue = 0
+            }, completionHandler: { [weak self] in
+                guard let self = self, !self.strengthOpen else {
+                    return
+                }
+                t.orderOut(nil)
+            })
+        }
+    }
+
+    private func makeStrengthTray() -> Panel {
+        let t = Panel(contentRect: CGRect(x: 0, y: 0, width: 260, height: 40),
+                      styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
+        t.isOpaque = false
+        t.backgroundColor = .clear
+        t.hasShadow = true
+        t.hidesOnDeactivate = false
+        t.isFloatingPanel = true
+        t.becomesKeyOnlyIfNeeded = true
+        t.level = panel.level
+        t.collectionBehavior = panel.collectionBehavior
+        t.alphaValue = 0
+        let background = NSVisualEffectView.darkGlass(radius: 14)
+        t.contentView = background
+
+        let title = NSTextField(labelWithString: "Tap strength")
+        title.font = .systemFont(ofSize: 12, weight: .semibold)
+        title.textColor = NSColor(white: 1, alpha: 0.9)
+        let slider = Slider(value: Preferences.tapStrength,
+                              minValue: Preferences.tapStrengthRange.lowerBound,
+                              maxValue: Preferences.tapStrengthRange.upperBound,
+                              target: self, action: #selector(strengthChanged(_:)))
+        slider.isContinuous = true
+        slider.trackFillColor = .white
+        slider.setAccessibilityLabel("Tap strength")
+        slider.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        let value = NSTextField(labelWithString: "1.0×")
+        value.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        value.textColor = NSColor(white: 1, alpha: 0.75)
+        value.alignment = .right
+        value.widthAnchor.constraint(equalToConstant: 34).isActive = true
+
+        let row = NSStackView(views: [title, slider, value])
+        row.orientation = .horizontal
+        row.spacing = 12
+        row.edgeInsets = NSEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        row.translatesAutoresizingMaskIntoConstraints = false
+        background.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: background.leadingAnchor),
+            row.trailingAnchor.constraint(equalTo: background.trailingAnchor),
+            row.topAnchor.constraint(equalTo: background.topAnchor),
+            row.bottomAnchor.constraint(equalTo: background.bottomAnchor),
+        ])
+        background.removeFocusRings()
+        row.layoutSubtreeIfNeeded()
+        t.setContentSize(row.fittingSize)
+
+        strengthTray = t
+        strengthSlider = slider
+        strengthLabel = value
+        return t
+    }
+
+    @objc private func strengthChanged(_ sender: NSSlider) {
+        let rounded = (sender.doubleValue * 20).rounded() / 20
+        Preferences.tapStrength = rounded
+        refreshStrength()
+    }
+
+    private func refreshStrength() {
+        let k = Preferences.tapStrength
+        if let slider = strengthSlider, abs(slider.doubleValue - k) > 0.05 {
+            slider.doubleValue = k
+        }
+        strengthLabel?.stringValue = String(format: "%.1f×", k)
     }
 
     private func setInkOpen(_ open: Bool) {
@@ -140,6 +262,7 @@ final class Toolbar {
         }
         inkOpen = open
         if open {
+            setStrengthOpen(false)
             if swatches.isEmpty {
                 for choice in InkChoice.allCases {
                     let b = makeButton(image: nil, tip: choice.title, side: 30) { [weak self] in
@@ -386,6 +509,7 @@ final class Toolbar {
 
     func hide() {
         setInkOpen(false)
+        setStrengthOpen(false)
         hideHint()
         revealed = false
         panel.alphaValue = 0
@@ -399,6 +523,7 @@ final class Toolbar {
         revealed = value
         if !value {
             setInkOpen(false)
+            setStrengthOpen(false)
         }
         panel.ignoresMouseEvents = !value
         NSAnimationContext.runAnimationGroup { ctx in

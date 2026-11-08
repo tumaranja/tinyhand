@@ -30,6 +30,7 @@ final class ArmView: NSView {
 
     private var pressAmount: CGFloat = 0
     private var tapStart: CFTimeInterval?
+    private var tapStrength = CGFloat(Preferences.tapStrength)
     private var releasedAt: CFTimeInterval = 0
 
     /// Seconds from press() until the fingertip lands on the spot (wind-up + swing-in).
@@ -97,6 +98,7 @@ final class ArmView: NSView {
         NotificationCenter.default.addObserver(forName: Preferences.changed, object: nil, queue: .main) { [weak self] _ in
             self?.handLenFrac = Preferences.pointerSize
             self?.showShadow = Preferences.showShadow
+            self?.tapStrength = CGFloat(Preferences.tapStrength)
         }
     }
 
@@ -161,10 +163,11 @@ final class ArmView: NSView {
         let t = now - start
         let up = ArmView.swingWindUp
         let strike = ArmView.strikeDelay
+        let k = tapStrength
         func pose(_ e: CGFloat, press: CGFloat) -> Swing {
-            let tipX: CGFloat = 0.025
-            let tipY: CGFloat = 0.2
-            return Swing(press: press, poke: 0.02 * e, tilt: -0.03 * e,
+            let tipX: CGFloat = 0.025 * k
+            let tipY: CGFloat = 0.2 * k
+            return Swing(press: press, poke: 0.02 * k * e, tilt: -0.03 * k * e,
                          tipX: tipX * e, tipY: tipY * e, gripX: 0.45 * tipX * e, gripY: 0.45 * tipY * e)
         }
         if t < up {

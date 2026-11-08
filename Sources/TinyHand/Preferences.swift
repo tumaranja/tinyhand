@@ -99,6 +99,14 @@ enum Preferences {
         set { set(Double(newValue), "pointerSize") }
     }
 
+    static let tapStrengthRange: ClosedRange<Double> = 0.3...2
+
+    /// How far the stick swings up on a tap; 1 lifts the fingertip about 20% of the screen height.
+    static var tapStrength: Double {
+        get { defaults.object(forKey: "tapStrength") as? Double ?? 1 }
+        set { set(min(max(newValue, tapStrengthRange.lowerBound), tapStrengthRange.upperBound), "tapStrength") }
+    }
+
     static var showShadow: Bool {
         get { defaults.object(forKey: "showShadow") as? Bool ?? true }
         set { set(newValue, "showShadow") }
@@ -177,7 +185,7 @@ enum Preferences {
     static func resetAll() {
         for key in ["shortcut.toggle", "shortcut.clear", "pointerSize", "showShadow", "fadeSeconds",
                     "sound.hands", "sound.laser", "interactKey", "interactKeepsHand", "pinnedStyles", "pointerStyle",
-                    "inkChoice", "showInkButton", "tapSound"] {
+                    "inkChoice", "showInkButton", "tapSound", "tapStrength"] {
             defaults.removeObject(forKey: key)
         }
         NotificationCenter.default.post(name: changed, object: nil)
