@@ -19,6 +19,33 @@ final class Toolbar {
         override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     }
 
+    /// Slider drawn in the toolbar's own look: a thin white track on the dark glass and a plain white knob.
+    private final class SliderCell: NSSliderCell {
+        override func drawBar(inside rect: NSRect, flipped: Bool) {
+            let bar = NSRect(x: rect.minX, y: rect.midY - 2, width: rect.width, height: 4)
+            NSColor(white: 1, alpha: 0.18).setFill()
+            NSBezierPath(roundedRect: bar, xRadius: 2, yRadius: 2).fill()
+            var filled = bar
+            filled.size.width = max(0, knobRect(flipped: flipped).midX - bar.minX)
+            NSColor(white: 1, alpha: 0.85).setFill()
+            NSBezierPath(roundedRect: filled, xRadius: 2, yRadius: 2).fill()
+        }
+
+        override func drawKnob(_ knobRect: NSRect) {
+            let d: CGFloat = 14
+            let dot = NSRect(x: knobRect.midX - d / 2, y: knobRect.midY - d / 2, width: d, height: d)
+            NSGraphicsContext.saveGraphicsState()
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor(white: 0, alpha: 0.4)
+            shadow.shadowBlurRadius = 3
+            shadow.shadowOffset = NSSize(width: 0, height: -1)
+            shadow.set()
+            NSColor.white.setFill()
+            NSBezierPath(ovalIn: dot).fill()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+    }
+
     private let panel: Panel
     private let stack = NSStackView()
     private var styleButtons: [PointerStyle: Button] = [:]
@@ -203,27 +230,36 @@ final class Toolbar {
         let background = NSVisualEffectView.darkGlass(radius: 14)
         t.contentView = background
 
-        let title = NSTextField(labelWithString: "Tap strength")
-        title.font = .systemFont(ofSize: 12, weight: .semibold)
-        title.textColor = NSColor(white: 1, alpha: 0.9)
-        let slider = Slider(value: Preferences.tapStrength,
-                              minValue: Preferences.tapStrengthRange.lowerBound,
-                              maxValue: Preferences.tapStrengthRange.upperBound,
-                              target: self, action: #selector(strengthChanged(_:)))
+        // Same pattern as the pointer Size slider in Settings: a small and a big symbol either side.
+        func symbol(_ size: CGFloat) -> NSImageView {
+            let config = NSImage.SymbolConfiguration(pointSize: size, weight: .medium)
+            let v = NSImageView(image: NSImage(systemSymbolName: "hand.tap", accessibilityDescription: nil)?
+                .withSymbolConfiguration(config) ?? NSImage())
+            v.contentTintColor = NSColor(white: 1, alpha: 0.6)
+            return v
+        }
+        let slider = Slider()
+        slider.cell = SliderCell()
+        slider.minValue = Preferences.tapStrengthRange.lowerBound
+        slider.maxValue = Preferences.tapStrengthRange.upperBound
+        slider.doubleValue = Preferences.tapStrength
+        slider.target = self
+        slider.action = #selector(strengthChanged(_:))
         slider.isContinuous = true
-        slider.trackFillColor = .white
+        slider.toolTip = "Tap strength"
         slider.setAccessibilityLabel("Tap strength")
         slider.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        slider.heightAnchor.constraint(equalToConstant: 30).isActive = true
         let value = NSTextField(labelWithString: "1.0×")
         value.font = .monospacedDigitSystemFont(ofSize: 12, weight: .medium)
-        value.textColor = NSColor(white: 1, alpha: 0.75)
+        value.textColor = NSColor(white: 1, alpha: 0.85)
         value.alignment = .right
         value.widthAnchor.constraint(equalToConstant: 34).isActive = true
 
-        let row = NSStackView(views: [title, slider, value])
+        let row = NSStackView(views: [symbol(11), slider, symbol(16), value])
         row.orientation = .horizontal
-        row.spacing = 12
-        row.edgeInsets = NSEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        row.spacing = 10
+        row.edgeInsets = NSEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
         row.translatesAutoresizingMaskIntoConstraints = false
         background.addSubview(row)
         NSLayoutConstraint.activate([
@@ -383,6 +419,20 @@ final class Toolbar {
         }
         view.cacheDisplay(in: view.bounds, to: rep)
         view.layer?.backgroundColor = nil
+        return rep
+    }
+
+    func snapshotStrengthTray() -> NSBitmapImageRep? {
+        setStrengthOpen(true)
+        guard let view = strengthTray?.contentView else {
+            return nil
+        }
+        view.layer?.backgroundColor = NSColor(white: 0.16, alpha: 1).cgColor
+        view.layoutSubtreeIfNeeded()
+        guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+            return nil
+        }
+        view.cacheDisplay(in: view.bounds, to: rep)
         return rep
     }
 

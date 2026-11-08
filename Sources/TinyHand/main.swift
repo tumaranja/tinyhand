@@ -35,6 +35,11 @@ if let idx = CommandLine.arguments.firstIndex(of: "--toolbar-test") {
             print("rendered \(hintOut)")
         }
     }
+    if CommandLine.arguments.contains("--strength"), let data = bar.snapshotStrengthTray()?.representation(using: .png, properties: [:]) {
+        let trayOut = out.replacingOccurrences(of: ".png", with: "-strength.png")
+        try? data.write(to: URL(fileURLWithPath: trayOut))
+        print("rendered \(trayOut)")
+    }
     if CommandLine.arguments.contains("--ink"), let data = bar.snapshotInkTray()?.representation(using: .png, properties: [:]) {
         let trayOut = out.replacingOccurrences(of: ".png", with: "-ink.png")
         try? data.write(to: URL(fileURLWithPath: trayOut))

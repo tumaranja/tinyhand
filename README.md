@@ -18,6 +18,18 @@ In the original, tapping only shrinks the hand a little. Here the stick swings u
 
 The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/TinyHand/ArmView.swift). The browser prototype in [prototypes/tap-motion](prototypes/tap-motion) mirrors it.
 
+## Toolbar
+
+The toolbar at the bottom of the screen gets one new button, Tap strength. It opens a slider in the toolbar's own style, like the ink colour picker.
+
+**Before**
+
+<img src="./.github/toolbar-before.png" alt="The original toolbar: pointer styles, ink colour, sound and close." width="489" />
+
+**After**
+
+<img src="./.github/toolbar-after.png" alt="The toolbar with the new Tap strength button selected and its slider open above it, set to 1.0×." width="489" />
+
 ## License
 
 MIT, like the original. See [LICENSE](LICENSE). The original is © Kamran Ahmed; the swing tap changes are © tumaranja.
