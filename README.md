@@ -4,7 +4,7 @@ A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that 
 
 In the original app, tapping only shrinks the hand a little. Here the stick swings up and down to make it more expressive, similar to how it would move in the physical world.
 
-This repo is the source of a pull request to the original app. If it gets accepted, everyone using TinyHand would get the new tap motion automatically.
+This repo is the source of a pull request to the original app. If it gets accepted, everyone using TinyHand would get the new tap motion with the app's regular updates.
 
 [Try in your browser →](https://tumaranja.github.io/tinyhand/prototypes/tap-motion/)
 
