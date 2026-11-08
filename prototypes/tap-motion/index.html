@@ -204,12 +204,12 @@ function step(dt, colors) {
 }
 
 // ---- Record mode: fixed-size frames, both areas side by side with labels ----
-const REC = { w: 320, h: 240, pad: 12, label: 30, d: 2 };
+const REC = { w: 320, h: 240, pad: 12, radius: 10, textX: 12, textY: 0, label: 30, d: 2 };
 const REC_THEMES = {
-  light: { bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', screen: '#ffffff', dot: '#cccccc' },
-  dark: { bg: '#000000', panel: '#1a1a1a', ink: '#ffffff', muted: '#aaaaaa', screen: '#1a1a1a', dot: '#444444' },
+  light: { pad: 12, radius: 10, textX: 12, textY: 0, bg: '#f2f2f2', panel: '#ffffff', ink: '#000000', muted: '#555555', screen: '#ffffff', dot: '#cccccc' },
+  dark: { pad: 12, radius: 10, textX: 12, textY: 0, bg: '#000000', panel: '#1a1a1a', ink: '#ffffff', muted: '#aaaaaa', screen: '#1a1a1a', dot: '#444444' },
   // GitHub's dark page colour, so the GIF sits seamlessly in the README: one colour, no cards.
-  github: { bg: '#0d1117', panel: '#0d1117', ink: '#f0f6fc', muted: '#9198a1', screen: '#0d1117', dot: '#3d444d' },
+  github: { pad: 0, radius: 0, textX: 24, textY: 12, bg: '#0d1117', panel: '#0d1117', ink: '#f0f6fc', muted: '#9198a1', screen: '#0d1117', dot: '#3d444d' },
 };
 async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'github' } = {}) {
   Object.assign(REC, REC_THEMES[theme]);
@@ -226,11 +226,11 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'github
     o.fillStyle = REC.bg; o.fillRect(0, 0, W, H);
     stages.forEach((s, j) => {
       const x = REC.pad + j * (REC.w + REC.pad), y = REC.pad;
-      o.save(); o.beginPath(); o.roundRect(x, y, REC.w, REC.h, 10); o.fillStyle = REC.panel; o.fill(); o.clip();
+      o.save(); o.beginPath(); o.roundRect(x, y, REC.w, REC.h, REC.radius); o.fillStyle = REC.panel; o.fill(); o.clip();
       o.drawImage(s.canvas, x, y, REC.w, REC.h);
       o.restore();
       o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
-      o.fillText(j ? 'After' : 'Before', x + 12, y + REC.label / 2 + 1);
+      o.fillText(j ? 'After' : 'Before', x + REC.textX, y + REC.textY + REC.label / 2 + 1);
     });
     const blob = await new Promise(r => out.toBlob(r, 'image/png'));
     await fetch(`/frame/${String(i).padStart(4, '0')}.png`, { method: 'POST', body: blob });
