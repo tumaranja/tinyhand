@@ -31,6 +31,16 @@ final class Toolbar {
             NSBezierPath(roundedRect: filled, xRadius: 2, yRadius: 2).fill()
         }
 
+        /// Keep the knob a little inside the track's ends, so some rail always shows past it.
+        override func knobRect(flipped: Bool) -> NSRect {
+            let bar = barRect(flipped: flipped)
+            let span = maxValue - minValue
+            let t = span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
+            let pad: CGFloat = 12
+            let cx = bar.minX + pad + t * (bar.width - 2 * pad)
+            return NSRect(x: cx - 10, y: bar.midY - 10, width: 20, height: 20)
+        }
+
         override func drawKnob(_ knobRect: NSRect) {
             let d: CGFloat = 14
             let dot = NSRect(x: knobRect.midX - d / 2, y: knobRect.midY - d / 2, width: d, height: d)
