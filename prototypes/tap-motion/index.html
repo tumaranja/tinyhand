@@ -52,7 +52,7 @@
 <main>
   <h1>Tap motion</h1>
   <div class="controls">
-    <label>Swing range <input id="swingRange" type="range" min="0" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
+    <label>Swing range <input id="swingRange" autocomplete="off" type="range" min="0" max="2" step="0.05" value="1"> <output id="sv">1.0×</output></label>
   </div>
   <div class="stages">
     <figure><figcaption>Before</figcaption><canvas id="cNow"></canvas></figure>
@@ -173,6 +173,8 @@ function drawArm(s, a, cursor, dt) {
 // ---- Controls and clock ----
 const swingRange = document.getElementById('swingRange'), sv = document.getElementById('sv');
 const fill = () => swingRange.style.setProperty('--fill', (swingRange.value - swingRange.min) / (swingRange.max - swingRange.min) * 100 + '%');
+swingRange.value = 1; // always open at 1×, even if the browser remembers an earlier value
+sv.textContent = '1.0×';
 swingRange.oninput = () => { sv.textContent = +swingRange.value < 0.025 ? 'Off' : (+swingRange.value).toFixed(1) + '×'; fill(); };
 fill();
 let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
