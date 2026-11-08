@@ -1,6 +1,6 @@
 # TinyHand: expressive tap motion
 
-A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that changes one thing: the tap motion. For everything else (download, install, how to use it), see the [original repo](https://github.com/nilbuild/tinyhand).
+A fork of [TinyHand](https://github.com/nilbuild/tinyhand) by Kamran Ahmed that changes the range of tap motion. For everything else (download, install, how to use it), see the [original repo](https://github.com/nilbuild/tinyhand).
 
 In the original app, tapping only shrinks the hand a little. Here the stick swings up and down to make it more expressive, similar to how it would move in the physical world.
 
