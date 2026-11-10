@@ -138,6 +138,11 @@ enum Preferences {
         set { set(newValue, "interactKeepsHand") }
     }
 
+    static var doubleShiftClickThrough: Bool {
+        get { defaults.object(forKey: "doubleShiftClickThrough") as? Bool ?? true }
+        set { set(newValue, "doubleShiftClickThrough") }
+    }
+
     static var interactKey: InteractKey {
         get { defaults.string(forKey: "interactKey").flatMap(InteractKey.init(rawValue:)) ?? .option }
         set { set(newValue.rawValue, "interactKey") }
@@ -146,6 +151,11 @@ enum Preferences {
     static var inkChoice: InkChoice {
         get { defaults.string(forKey: "inkChoice").flatMap(InkChoice.init(rawValue:)) ?? .match }
         set { set(newValue.rawValue, "inkChoice") }
+    }
+
+    static var showToolbar: Bool {
+        get { defaults.object(forKey: "showToolbar") as? Bool ?? true }
+        set { set(newValue, "showToolbar") }
     }
 
     static var showInkButton: Bool {
@@ -185,8 +195,8 @@ enum Preferences {
 
     static func resetAll() {
         for key in ["shortcut.toggle", "shortcut.clear", "pointerSize", "showShadow", "fadeSeconds",
-                    "sound.hands", "sound.laser", "interactKey", "interactKeepsHand", "pinnedStyles", "pointerStyle",
-                    "inkChoice", "showInkButton", "tapSound", "swingRange"] {
+                    "sound.hands", "sound.laser", "interactKey", "interactKeepsHand", "doubleShiftClickThrough", "pinnedStyles", "pointerStyle",
+                    "inkChoice", "showInkButton", "showToolbar", "tapSound", "swingRange"] {
             defaults.removeObject(forKey: key)
         }
         NotificationCenter.default.post(name: changed, object: nil)
