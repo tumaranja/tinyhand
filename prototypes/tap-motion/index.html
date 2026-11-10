@@ -125,11 +125,11 @@ function drawScreen(s, colors) {
 }
 
 function drawArm(s, a, cursor, dt) {
-  const { g, W, H } = s, k = +swingRange.value, S = baseH(s) * ZOOM;
+  const { g, W, H } = s, k = s.k ?? +swingRange.value, S = baseH(s) * ZOOM;
   const cur = { x: cursor.x, y: H - cursor.y }; // y-up like AppKit
   const targetX = Math.min(Math.max(cur.x + gripLeanFrac * S * 1.6, W * 0.15), W + S * 0.3);
   s.gripX = s.gripX == null ? targetX : s.gripX + (targetX - s.gripX) * (1 - Math.pow(1 - gripFollow, dt / 16.67));
-  const grip = { x: s.gripX, y: -(gripDepthFrac + CROP_Y) * S }; // the area sits CROP_Y above the screen's bottom edge
+  const grip = { x: s.gripX, y: -(gripDepthFrac + CROP_Y) * S + (s.inset || 0) }; // the area sits CROP_Y above the screen's bottom edge
 
   // Swing range 0 is the original tap, same as the Before side.
   const classic = s.kind === 'now' || k <= 0.001;
@@ -180,7 +180,7 @@ sv.textContent = '1.0×';
 swingRange.oninput = () => { sv.textContent = +swingRange.value < 0.025 ? 'Off' : (+swingRange.value).toFixed(1) + '×'; fill(); };
 fill();
 let clock = 0, asset = null, cursorN = { ...spots[2] }, lastMouse = -1e9;
-const stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];
+let stages = [makeStage(document.getElementById('cNow'), 'now'), makeStage(document.getElementById('cNew'), 'new')];
 function tap() { stages.forEach(s => { s.press = 1; s.tapT = clock; }); }
 stages.forEach(s => {
   const at = e => { const r = s.canvas.getBoundingClientRect(); cursorN = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height }; lastMouse = performance.now(); };
@@ -207,7 +207,7 @@ function step(dt, colors) {
   for (const s of stages) {
     drawScreen(s, colors);
     // Auto-tap spots are fractions of the 4:3 base area, measured up from the bottom edge.
-    const y = auto ? s.H - (1 - cursorN.y) * baseH(s) : cursorN.y * s.H;
+    const y = auto ? s.H - (s.inset || 0) - (1 - cursorN.y) * baseH(s) : cursorN.y * s.H;
     if (asset) drawArm(s, asset, { x: cursorN.x * s.W, y }, dt);
   }
 }
@@ -247,6 +247,48 @@ async function recordFrames({ fps = 25, seconds = 4.5, warm = 3, theme = 'github
   return frames;
 }
 window.recordFrames = recordFrames;
+
+// Grid GIF: Before on the top row; After at swing range Off, 1× and 2× on the bottom row.
+async function recordGrid({ fps = 25, seconds = 4.5, warm = 3, theme = 'github', w = 240, h = 304, inset = 40 } = {}) {
+  Object.assign(REC, REC_THEMES[theme]);
+  const cells = [
+    { kind: 'now', k: 0, label: 'Before', col: 0, row: 0 },
+    { kind: 'new', k: 0, label: 'After · 0 (same as before)', col: 0, row: 1 },
+    { kind: 'new', k: 1, label: 'After · 1×', col: 1, row: 1 },
+    { kind: 'new', k: 2, label: 'After · 2×', col: 2, row: 1 },
+  ];
+  const saved = stages;
+  stages = cells.map(c => Object.assign(makeStage(document.createElement('canvas'), c.kind), { k: c.k, inset }));
+  // The app's own Swing range tray, rendered from Toolbar.swift at 0, 1 and 2 (see AGENTS.md).
+  const trays = await Promise.all([0, 1, 2].map(k => new Promise(res => { const im = new Image(); im.onload = () => res(im); im.src = `trays/swing-range-${k}.png?v=${Date.now()}`; })));
+  stages.forEach(st => sizeStage(st, w, h, REC.d));
+  const out = document.createElement('canvas');
+  const W = w * 3, H = h * 2;
+  out.width = W * REC.d; out.height = H * REC.d;
+  const o = out.getContext('2d'); o.scale(REC.d, REC.d);
+  const colors = { screen: REC.screen, dot: REC.dot };
+  for (let t = 0; t < warm * CYCLE; t += 1000 / fps) step(1000 / fps, colors);
+  const frames = Math.round(fps * seconds);
+  for (let i = 0; i < frames; i++) {
+    step(1000 / fps, colors);
+    o.fillStyle = REC.bg; o.fillRect(0, 0, W, H);
+    stages.forEach((st, j) => {
+      const c = cells[j], x = c.col * w, y = c.row * h;
+      o.drawImage(st.canvas, x, y, w, h);
+      o.font = '700 14px Manrope, system-ui, sans-serif'; o.fillStyle = REC.ink; o.textBaseline = 'middle';
+      o.fillText(c.label, x + REC.textX, y + REC.textY + REC.label / 2 + 1);
+      if (c.row === 1) {
+        const t = trays[c.k], tw = t.width / 2, th = t.height / 2;
+        o.drawImage(t, x + (w - tw) / 2, y + h - th - (inset - th) / 2, tw, th);
+      }
+    });
+    const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+    await fetch(`/frame/${String(i).padStart(4, '0')}.png`, { method: 'POST', body: blob });
+  }
+  stages = saved;
+  return frames;
+}
+window.recordGrid = recordGrid;
 
 loadHand('lavender').then(a => {
   asset = a;
