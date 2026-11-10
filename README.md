@@ -8,7 +8,7 @@ This repo is the source of a pull request to the original app. If it gets accept
 
 [Try in your browser →](https://tumaranja.github.io/tinyhand/prototypes/tap-motion/)
 
-<img src="./.github/tap-motion.gif" alt="Side by side: Before, the original tap only shrinks the hand a little; After, the hand swings up and down onto the spot." width="680" />
+<img src="./.github/tap-motion.gif" alt="Top row: Before, the original tap only shrinks the hand a little. Bottom row: After, with the Swing range slider at 0 (same as before), 1× and 2×; the higher the setting, the further the stick swings up and down." width="680" />
 
 ## The motion
 
@@ -20,18 +20,6 @@ This repo is the source of a pull request to the original app. If it gets accept
 
 The code is `ArmView.swing(at:)` in [Sources/TinyHand/ArmView.swift](Sources/TinyHand/ArmView.swift). The browser prototype in [prototypes/tap-motion](prototypes/tap-motion) mirrors it.
 
-## Toolbar
-
-The toolbar at the bottom of the screen gets a new button, Swing range. It controls how much the stick swings on tap.
-
-**Before**
-
-<img src="./.github/toolbar-before.png" alt="The original toolbar: pointer styles, ink colour, sound and close." width="489" />
-
-**After**
-
-<img src="./.github/toolbar-after.png" alt="The toolbar with the new Swing range button selected and its slider open above it, set to 1.0×." width="489" />
-
 ## License
 
-MIT, like the original. See [LICENSE](LICENSE). The original is © Kamran Ahmed; the swing tap changes are © tumaranja.
+MIT, like the original. See [LICENSE](LICENSE). The original is © Kamran Ahmed; the tap motion changes are © tumaranja.
