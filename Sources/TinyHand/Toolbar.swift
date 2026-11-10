@@ -21,25 +21,30 @@ final class Toolbar {
 
     /// Slider drawn in the toolbar's own look: a thin white track on the dark glass and a plain white knob.
     private final class SliderCell: NSSliderCell {
+        /// The knob's centre runs from one end of the rail to the other, so at Off and at the top
+        /// the knob sits right over the rail's end and no rail shows beyond it.
+        private static let inset: CGFloat = 8
+
+        private var fraction: CGFloat {
+            let span = maxValue - minValue
+            return span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
+        }
+
         override func drawBar(inside rect: NSRect, flipped: Bool) {
-            let bar = NSRect(x: rect.minX, y: rect.midY - 2, width: rect.width, height: 4)
+            let i = SliderCell.inset
+            let bar = NSRect(x: rect.minX + i, y: rect.midY - 2, width: rect.width - 2 * i, height: 4)
             NSColor(white: 1, alpha: 0.18).setFill()
             NSBezierPath(roundedRect: bar, xRadius: 2, yRadius: 2).fill()
             var filled = bar
-            let span = maxValue - minValue
-            let t = span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
-            filled.size.width = t * bar.width // empty at Off, full at the top end
+            filled.size.width = fraction * bar.width
             NSColor(white: 1, alpha: 0.85).setFill()
             NSBezierPath(roundedRect: filled, xRadius: 2, yRadius: 2).fill()
         }
 
-        /// Keep the knob a little inside the track's ends, so some rail always shows past it.
         override func knobRect(flipped: Bool) -> NSRect {
             let bar = barRect(flipped: flipped)
-            let span = maxValue - minValue
-            let t = span > 0 ? CGFloat((doubleValue - minValue) / span) : 0
-            let pad: CGFloat = 18
-            let cx = bar.minX + pad + t * (bar.width - 2 * pad)
+            let i = SliderCell.inset
+            let cx = bar.minX + i + fraction * (bar.width - 2 * i)
             return NSRect(x: cx - 10, y: bar.midY - 10, width: 20, height: 20)
         }
 
